@@ -18,6 +18,8 @@ type JSONStore struct {
 	sync.RWMutex
 }
 
+// Init initializes the JSON store so that it will save to `data.json.gz`
+// with GZIP enabled automatically
 func (s *JSONStore) Init() {
 	s.Lock()
 	defer s.Unlock()
@@ -26,18 +28,21 @@ func (s *JSONStore) Init() {
 	s.gzip = true
 }
 
+// SetGzip will toggle Gzip compression
 func (s *JSONStore) SetGzip(on bool) {
 	s.Lock()
 	defer s.Unlock()
 	s.gzip = on
 }
 
+// SetLocation determines where the file will be saved for persistence
 func (s *JSONStore) SetLocation(location string) {
 	s.Lock()
 	s.location = location
 	s.Unlock()
 }
 
+// Load will load the data from the current file
 func (s *JSONStore) Load() error {
 	s.Lock()
 	defer s.Unlock()
@@ -65,6 +70,8 @@ func (s *JSONStore) Load() error {
 	return err
 }
 
+// Save will save the current data to the location, adding Gzip compression if
+// is enabled (it is by default)
 func (s *JSONStore) Save() error {
 	s.RLock()
 	defer s.RUnlock()
@@ -86,12 +93,14 @@ func (s *JSONStore) Save() error {
 	return err
 }
 
+// Set will set a key to a value, and then save go disk
 func (s *JSONStore) Set(key string, value interface{}) error {
 	s.set(key, value)
 	s.Save()
 	return nil
 }
 
+// SetMem will set a key to a value, but not save to disk
 func (s *JSONStore) SetMem(key string, value interface{}) error {
 	s.set(key, value)
 	return nil
@@ -104,6 +113,9 @@ func (s *JSONStore) set(key string, value interface{}) error {
 	return nil
 }
 
+// Get will return the value associated with a key
+// if the key contains a `*`, like `name:*`, it will a map[string]interface{}
+// where each key is a key containing `*` and its corresponding value
 func (s *JSONStore) Get(key string) (interface{}, error) {
 	if strings.Contains(key, "*") {
 		return s.getmany(key)
