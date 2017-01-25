@@ -14,12 +14,22 @@ import (
 type JSONStore struct {
 	Data     map[string]interface{}
 	location string
+	gzip     bool
 	sync.RWMutex
 }
 
 func (s *JSONStore) Init() {
-	s.location = "data.json"
+	s.Lock()
+	defer s.Unlock()
+	s.location = "data.json.gz"
 	s.Data = make(map[string]interface{})
+	s.gzip = true
+}
+
+func (s *JSONStore) SetGzip(on bool) {
+	s.Lock()
+	defer s.Unlock()
+	s.gzip = on
 }
 
 func (s *JSONStore) SetLocation(location string) {
@@ -31,31 +41,48 @@ func (s *JSONStore) SetLocation(location string) {
 func (s *JSONStore) Load() error {
 	s.Lock()
 	defer s.Unlock()
-	if _, err := os.Stat(s.location + ".gz"); os.IsNotExist(err) {
-		return errors.New("Location does not exist")
+	var err error
+	if _, err = os.Stat(s.location); os.IsNotExist(err) {
+		err = errors.New("Location does not exist")
 	} else {
-		b, err2 := readGzFile(s.location + ".gz")
-		if err != nil {
-			return err
+		var b []byte
+		if s.gzip {
+			if !strings.Contains(s.location, ".gz") {
+				s.location = s.location + ".gz"
+			}
+			b, err = readGzFile(s.location)
+			if err != nil {
+				return err
+			}
+		} else {
+			b, err = ioutil.ReadFile(s.location)
+			if err != nil {
+				return err
+			}
 		}
-		err2 = json.Unmarshal(b, &s.Data)
-		return err2
+		err = json.Unmarshal(b, &s.Data)
 	}
+	return err
 }
 
 func (s *JSONStore) Save() error {
 	s.RLock()
 	defer s.RUnlock()
+	var err error
 	b, err := json.MarshalIndent(s.Data, "", " ")
 	if err != nil {
 		return err
 	}
 
-	var b2 bytes.Buffer
-	w := gzip.NewWriter(&b2)
-	w.Write(b)
-	w.Close()
-	err = ioutil.WriteFile(s.location+".gz", b2.Bytes(), 0644)
+	if s.gzip {
+		var b2 bytes.Buffer
+		w := gzip.NewWriter(&b2)
+		w.Write(b)
+		w.Close()
+		err = ioutil.WriteFile(s.location, b2.Bytes(), 0644)
+	} else {
+		err = ioutil.WriteFile(s.location, b, 0644)
+	}
 	return err
 }
 

@@ -44,7 +44,7 @@ func BenchmarkSetMem(b *testing.B) {
 	fs.Init()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		fs.Set("data", 1234)
+		fs.SetMem("data", 1234)
 	}
 }
 
