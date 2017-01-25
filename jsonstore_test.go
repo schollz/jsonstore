@@ -89,3 +89,23 @@ func TestSet(t *testing.T) {
 		t.Errorf("Got %+v, and %s", val, err.Error())
 	}
 }
+
+func TestSetNoCompress(t *testing.T) {
+	// Test simple saving and getting
+	var fs JSONStore
+	fs.Init()
+	fs.SetLocation("nocompress.json")
+	fs.SetGzip(false)
+	fs.Set("name", "zack")
+
+	var fs2 JSONStore
+	fs2.Init()
+	fs2.SetLocation("nocompress.json")
+	fs2.SetGzip(false)
+	fs2.Load()
+	val, err := fs2.Get("name")
+	if err != nil || val != "zack" {
+		t.Errorf("Got %+v, and %s", val, err.Error())
+	}
+
+}
