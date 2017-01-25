@@ -1,6 +1,8 @@
 package jsonstore
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -29,10 +31,10 @@ func (s *JSONStore) SetLocation(location string) {
 func (s *JSONStore) Load() error {
 	s.Lock()
 	defer s.Unlock()
-	if _, err := os.Stat(s.location); os.IsNotExist(err) {
+	if _, err := os.Stat(s.location + ".gz"); os.IsNotExist(err) {
 		return errors.New("Location does not exist")
 	} else {
-		b, err2 := ioutil.ReadFile(s.location)
+		b, err2 := readGzFile(s.location + ".gz")
 		if err != nil {
 			return err
 		}
@@ -48,7 +50,12 @@ func (s *JSONStore) Save() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(s.location, b, 0644)
+
+	var b2 bytes.Buffer
+	w := gzip.NewWriter(&b2)
+	w.Write(b)
+	w.Close()
+	err = ioutil.WriteFile(s.location+".gz", b2.Bytes(), 0644)
 	return err
 }
 
@@ -112,4 +119,27 @@ func (s *JSONStore) getone(key string) (interface{}, error) {
 		return -1, errors.New(key + " not found")
 	}
 	return val, nil
+}
+
+// utils
+
+// from http://stackoverflow.com/questions/16890648/how-can-i-use-golangs-compress-gzip-package-to-gzip-a-file
+func readGzFile(filename string) ([]byte, error) {
+	fi, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer fi.Close()
+
+	fz, err := gzip.NewReader(fi)
+	if err != nil {
+		return nil, err
+	}
+	defer fz.Close()
+
+	s, err := ioutil.ReadAll(fz)
+	if err != nil {
+		return nil, err
+	}
+	return s, nil
 }
