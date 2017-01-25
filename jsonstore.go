@@ -113,24 +113,3 @@ func (s *JSONStore) getone(key string) (interface{}, error) {
 	}
 	return val, nil
 }
-
-func main() {
-	var fs JSONStore
-	fs.Init()
-	fs.SetLocation("urls.json")
-	fs.Load()
-	fs.Set("12", "34")
-	// fs.Save()
-	//
-	// fs.Lock()
-	// fmt.Println(fs.Data)
-	// for key := range fs.Data {
-	// 	fmt.Println(key, fs.Data[key])
-	// }
-	// fmt.Println(fs.Data["j"])
-	// fs.Unlock()
-	// fs.Set("new", "test")
-	// fs.Set("new", []string{"ab", "asd", "asdf"})
-	// fs.Save()
-	// fs.Load()
-}
