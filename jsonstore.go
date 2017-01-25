@@ -44,8 +44,8 @@ func (s *JSONStore) Load() error {
 }
 
 func (s *JSONStore) Save() error {
-	s.Lock()
-	defer s.Unlock()
+	s.RLock()
+	defer s.RUnlock()
 	b, err := json.MarshalIndent(s.Data, "", " ")
 	if err != nil {
 		return err
