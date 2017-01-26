@@ -33,12 +33,22 @@ func (s *JSONStore) SetGzip(on bool) {
 	s.Lock()
 	defer s.Unlock()
 	s.gzip = on
+	if s.gzip && !strings.Contains(s.location, ".gz") {
+		s.location = s.location + ".gz"
+	} else if !s.gzip && strings.Contains(s.location, ".gz") {
+		s.location = strings.Replace(s.location, ".gz", "", 1)
+	}
 }
 
 // SetLocation determines where the file will be saved for persistence
 func (s *JSONStore) SetLocation(location string) {
 	s.Lock()
 	s.location = location
+	if s.gzip && !strings.Contains(s.location, ".gz") {
+		s.location = s.location + ".gz"
+	} else if !s.gzip && strings.Contains(s.location, ".gz") {
+		s.location = strings.Replace(s.location, ".gz", "", 1)
+	}
 	s.Unlock()
 }
 

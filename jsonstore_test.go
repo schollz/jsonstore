@@ -84,9 +84,28 @@ func TestSet(t *testing.T) {
 
 	fs2.SetLocation("test.json")
 	fs2.Load()
-	val, err = fs2.Get("name2")
-	if err != nil || val != "zack2" {
-		t.Errorf("Got %+v, and %s", val, err.Error())
+	val, err = fs2.Get("name33")
+	if err == nil {
+		t.Errorf("Error should be thrown")
+	}
+
+	// Test setting a number
+	fs.Set("number", 1)
+	num, _ := fs.Get("number")
+	if num.(int)+1 != 2 {
+		t.Errorf("Error setting a number")
+	}
+
+	// Test setting an object
+	type Human struct {
+		Name   string
+		Height int
+	}
+	fs.Set("human", Human{Name: "John", Height: 5})
+	val, _ = fs.Get("human")
+	human := val.(Human)
+	if human.Height != 5 {
+		t.Errorf("Error setting a struct")
 	}
 }
 
