@@ -13,6 +13,7 @@ Its really for those times where you just need a JSON file, hence *JSONStore*.
 Its very easy to use:
 
 ```golang
+var fs jsonstore.JSONStore
 fs.Init()                 // initialize data file
 fs.Set("data", 1234)      // sets a key to 1234 and saves it
 data, _ := fs.Get("data")
