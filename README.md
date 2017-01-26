@@ -83,6 +83,10 @@ $ zcat data.json.gz
 }
 ```
 
+**JSONStore** in the wild:
+
+- [schollz/urls](https://github.com/schollz/urls) - URL shortening
+
 # License
 
 MIT
