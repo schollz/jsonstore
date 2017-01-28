@@ -12,76 +12,24 @@ Its really for those times where you just need a JSON file, hence *JSONStore*.
 
 ## Usage
 
-Here's an example:
-
 ```golang
-package main
+fs.Init()
 
-import (
-	"fmt"
+// set a key to any object you want
+type Human struct {
+  Name   string
+  Height float64
+}
+fs.Set("human:1", Human{"Dante", 5.4})
 
-	"github.com/schollz/jsonstore"
-)
-
-var fs jsonstore.JSONStore
-
-func main() {
-	// initialize data file
-	fs.Init()
-
-	// set a key to any object you want
-	type Human struct {
-		Name   string
-		Height float64
-	}
-	fs.Set("human:1", Human{"Dante", 5.4})
-
-	// get the data back via an interface
-	get, err := fs.Get("human:1")
-	if err != nil {
-		fmt.Println(err)
-	}
-	// convert the object from interface
-	fmt.Println(get.(Human))
-
-	// get the data of a non-existent object
-	_, err = fs.Get("nothing") // throws 'not found' error
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// get data from a lot of objects
-	fs.Set("human:2", Human{"Da Vinci", 5.2})
-	fs.Set("human:3", Human{"Einstein", 5.43})
-	fs.Set("NumberOfHumans", "3")
-	get, err = fs.Get("human:*")
-	for key, val := range get.(map[string]interface{}) {
-		fmt.Println(key, val.(Human))
-	}
+// get the data back via an interface
+var human Human
+err := fs.Get("human:1", &human)
+if err != nil {
+  fmt.Println(err)
 }
 ```
 
-It will automatically save it to a file with Gzip compression, `data.json.gz`.
-You can see your JSONStore file easily,
-
-```
-$ zcat data.json.gz
-{
- "NumberOfHumans": "3",
- "human:1": {
-  "Name": "Dante",
-  "Height": 5.4
- },
- "human:2": {
-  "Name": "Da Vinci",
-  "Height": 5.2
- },
- "human:3": {
-  "Name": "Einstein",
-  "Height": 5.43
- }
-}
-```
 
 **JSONStore** in the wild:
 
