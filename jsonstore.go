@@ -2,9 +2,11 @@ package jsonstore
 
 import (
 	"bytes"
+	"compress/flate"
 	"compress/gzip"
 	"encoding/json"
 	"errors"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -12,7 +14,7 @@ import (
 )
 
 type JSONStore struct {
-	Data     map[string]string
+	Data     map[string][]byte
 	location string
 	gzip     bool
 	sync.RWMutex
@@ -24,7 +26,7 @@ func (s *JSONStore) Init() {
 	s.Lock()
 	defer s.Unlock()
 	s.location = "data.json.gz"
-	s.Data = make(map[string]string)
+	s.Data = make(map[string][]byte)
 	s.gzip = true
 }
 
@@ -75,9 +77,17 @@ func (s *JSONStore) Load() error {
 				return err
 			}
 		}
-		err = json.Unmarshal(b, &s.Data)
+		data := make(map[string]string)
+		err = json.Unmarshal(b, &data)
+		if err != nil {
+			return err
+		}
+
+		for key := range data {
+			s.Data[key] = compressByte([]byte(data[key]))
+		}
 	}
-	return err
+	return nil
 }
 
 // Save will save the current data to the location, adding Gzip compression if
@@ -86,7 +96,14 @@ func (s *JSONStore) Save() error {
 	s.RLock()
 	defer s.RUnlock()
 	var err error
-	b, err := json.MarshalIndent(s.Data, "", " ")
+
+	// Decompress data to save it so its readable on disk
+	data := make(map[string]string)
+	for key := range s.Data {
+		data[key] = string(decompressByte(s.Data[key]))
+	}
+
+	b, err := json.MarshalIndent(data, "", " ")
 	if err != nil {
 		return err
 	}
@@ -119,11 +136,16 @@ func (s *JSONStore) SetMem(key string, value interface{}) error {
 func (s *JSONStore) set(key string, value interface{}) error {
 	s.Lock()
 	defer s.Unlock()
-	bJson, err := json.Marshal(value)
+
+	// Marshal the data into JSON
+	bJSON, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
-	s.Data[key] = string(bJson)
+
+	// Compress into map
+	s.Data[key] = compressByte(bJSON)
+
 	return nil
 }
 
@@ -133,11 +155,12 @@ func (s *JSONStore) set(key string, value interface{}) error {
 func (s *JSONStore) Get(key string, v interface{}) error {
 	s.RLock()
 	defer s.RUnlock()
-	val, ok := s.Data[key]
+	compressedVal, ok := s.Data[key]
 	if !ok {
 		return errors.New(key + " not found")
 	}
-	return json.Unmarshal([]byte(val), &v)
+	val := decompressByte(compressedVal)
+	return json.Unmarshal(val, &v)
 }
 
 // func (s *JSONStore) getmany(key string, v interface{}) error {
@@ -186,4 +209,33 @@ func readGzFile(filename string) ([]byte, error) {
 		return nil, err
 	}
 	return s, nil
+}
+
+// compressByte returns a compressed byte slice.
+func compressByte(src []byte) []byte {
+	compressedData := new(bytes.Buffer)
+	compress(src, compressedData, 9)
+	return compressedData.Bytes()
+}
+
+// decompressByte returns a decompressed byte slice.
+func decompressByte(src []byte) []byte {
+	compressedData := bytes.NewBuffer(src)
+	deCompressedData := new(bytes.Buffer)
+	decompress(compressedData, deCompressedData)
+	return deCompressedData.Bytes()
+}
+
+// compress uses flate to compress a byte slice to a corresponding level
+func compress(src []byte, dest io.Writer, level int) {
+	compressor, _ := flate.NewWriter(dest, level)
+	compressor.Write(src)
+	compressor.Close()
+}
+
+// compress uses flate to decompress an io.Reader
+func decompress(src io.Reader, dest io.Writer) {
+	decompressor := flate.NewReader(src)
+	io.Copy(dest, decompressor)
+	decompressor.Close()
 }

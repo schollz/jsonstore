@@ -1,6 +1,7 @@
 package jsonstore
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -111,6 +112,12 @@ func TestSet(t *testing.T) {
 	if human.Height != 5 {
 		t.Errorf("Error setting a struct")
 	}
+
+	size := 0
+	for key := range fs.Data {
+		size = size + len(fs.Data[key])
+	}
+	fmt.Println(size)
 }
 
 func TestSetNoCompress(t *testing.T) {
