@@ -12,7 +12,7 @@ import (
 )
 
 type JSONStore struct {
-	Data     map[string]interface{}
+	Data     map[string]string
 	location string
 	gzip     bool
 	sync.RWMutex
@@ -24,7 +24,7 @@ func (s *JSONStore) Init() {
 	s.Lock()
 	defer s.Unlock()
 	s.location = "data.json.gz"
-	s.Data = make(map[string]interface{})
+	s.Data = make(map[string]string)
 	s.gzip = true
 }
 
@@ -119,56 +119,51 @@ func (s *JSONStore) SetMem(key string, value interface{}) error {
 func (s *JSONStore) set(key string, value interface{}) error {
 	s.Lock()
 	defer s.Unlock()
-	s.Data[key] = value
+	bJson, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	s.Data[key] = string(bJson)
 	return nil
 }
 
 // Get will return the value associated with a key
 // if the key contains a `*`, like `name:*`, it will a map[string]interface{}
 // where each key is a key containing `*` and its corresponding value
-func (s *JSONStore) Get(key string) (interface{}, error) {
-	if strings.Contains(key, "*") {
-		return s.getmany(key)
-	} else {
-		return s.getone(key)
-	}
-}
-
-func (s *JSONStore) getmany(key string) (interface{}, error) {
-	s.RLock()
-	defer s.RUnlock()
-	possible := []string{}
-	for _, substring := range strings.Split(key, "*") {
-		if strings.Contains(substring, "*") || len(substring) == 0 {
-			continue
-		}
-		possible = append(possible, substring)
-	}
-
-	m := make(map[string]interface{})
-	for key := range s.Data {
-		for _, substring := range possible {
-			if strings.Contains(key, substring) {
-				m[key] = s.Data[key]
-			}
-		}
-	}
-
-	if len(m) == 0 {
-		return -1, errors.New(key + " not found")
-	}
-	return m, nil
-}
-
-func (s *JSONStore) getone(key string) (interface{}, error) {
+func (s *JSONStore) Get(key string, v interface{}) error {
 	s.RLock()
 	defer s.RUnlock()
 	val, ok := s.Data[key]
 	if !ok {
-		return -1, errors.New(key + " not found")
+		return errors.New(key + " not found")
 	}
-	return val, nil
+	return json.Unmarshal([]byte(val), &v)
 }
+
+// func (s *JSONStore) getmany(key string, v interface{}) error {
+// 	s.RLock()
+// 	defer s.RUnlock()
+// 	possible := []string{}
+// 	for _, substring := range strings.Split(key, "*") {
+// 		if strings.Contains(substring, "*") || len(substring) == 0 {
+// 			continue
+// 		}
+// 		possible = append(possible, substring)
+// 	}
+//
+// 	for key := range s.Data {
+// 		for _, substring := range possible {
+// 			if strings.Contains(key, substring) {
+// 				v[key] = s.Data[key]
+// 			}
+// 		}
+// 	}
+//
+// 	if len(m) == 0 {
+// 		return errors.New(key + " not found")
+// 	}
+// 	return nil
+// }
 
 // utils
 
