@@ -6,11 +6,12 @@ var sites = []string{"http://bettermotherfuckingwebsite.com/", "http://motherfuc
 
 func TestGet(t *testing.T) {
 	get_parallel(sites)
-	ip, err := fs.Get("http://icanhazip.com/")
+	var ip string
+	err := fs.Get("http://icanhazip.com/", &ip)
 	if err != nil {
 		t.Error(err)
 	}
-	if len(ip.(string)) == 0 {
+	if len(ip) == 0 {
 		t.Errorf("No IP found?")
 	}
 }
