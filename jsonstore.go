@@ -41,7 +41,7 @@ func Open(filename string) (*JSONStore, error) {
 			return nil, err
 		}
 	}
-	fs := new(JSONStore)
+	ks := new(JSONStore)
 
 	// First Unmarshal the strings
 	toOpen := make(map[string]string)
@@ -50,21 +50,21 @@ func Open(filename string) (*JSONStore, error) {
 		return nil, err
 	}
 	// Save to the raw message
-	fs.Data = make(map[string]json.RawMessage)
+	ks.Data = make(map[string]json.RawMessage)
 	for key := range toOpen {
-		fs.Data[key] = json.RawMessage(toOpen[key])
+		ks.Data[key] = json.RawMessage(toOpen[key])
 	}
-	return fs, nil
+	return ks, nil
 }
 
 // Save writes the jsonstore to disk.
-func Save(fs *JSONStore, filename string) (err error) {
-	fs.RLock()
-	defer fs.RUnlock()
+func Save(ks *JSONStore, filename string) (err error) {
+	ks.RLock()
+	defer ks.RUnlock()
 
 	toSave := make(map[string]string)
-	for key := range fs.Data {
-		toSave[key] = string(fs.Data[key])
+	for key := range ks.Data {
+		toSave[key] = string(ks.Data[key])
 	}
 	b, err := json.MarshalIndent(toSave, "", " ")
 	if err != nil {
