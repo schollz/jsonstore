@@ -13,7 +13,7 @@ Its really for those times where you just need a JSON file, hence *JSONStore*.
 ## Usage
 
 ```golang
-fs.Init()
+fs.Load("humans.json")
 
 // set a key to any object you want
 type Human struct {
@@ -30,6 +30,14 @@ if err != nil {
 }
 ```
 
+The datastore on disk is automatically Gziped (which can be toggled), and results in `humans.json.gz`:
+
+```bash
+$ zcat humans.json.gz
+{
+"human:1": "{\"Name\":\"Dante\",\"Height\":5.4}"
+}
+```
 
 **JSONStore** in the wild:
 

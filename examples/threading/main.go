@@ -32,7 +32,7 @@ func get(site string) string {
 }
 
 func get_n(sites []string) {
-	fs.Init()
+	fs.Load("data.json")
 	for _, site := range sites {
 		fs.SetMem(site, get(site))
 	}
@@ -40,7 +40,7 @@ func get_n(sites []string) {
 }
 
 func get_parallel(sites []string) {
-	fs.Init()
+	fs.Load("data.json")
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	// In order to use our pool of workers we need to send them work and collect their results. We make 2 channels for this.
 	jobs := make(chan string, 100)

@@ -14,20 +14,11 @@ import (
 )
 
 type JSONStore struct {
-	Data     map[string][]byte
-	location string
-	gzip     bool
+	Data        map[string][]byte
+	location    string
+	initialized bool
+	gzip        bool
 	sync.RWMutex
-}
-
-// Init initializes the JSON store so that it will save to `data.json.gz`
-// with GZIP enabled automatically
-func (s *JSONStore) Init() {
-	s.Lock()
-	defer s.Unlock()
-	s.location = "data.json.gz"
-	s.Data = make(map[string][]byte)
-	s.gzip = true
 }
 
 // SetGzip will toggle Gzip compression
@@ -42,22 +33,21 @@ func (s *JSONStore) SetGzip(on bool) {
 	}
 }
 
-// SetLocation determines where the file will be saved for persistence
-func (s *JSONStore) SetLocation(location string) {
+// Load will load the data from the current file
+func (s *JSONStore) Load(location string) error {
 	s.Lock()
+	defer s.Unlock()
+	s.gzip = true
 	s.location = location
 	if s.gzip && !strings.Contains(s.location, ".gz") {
 		s.location = s.location + ".gz"
 	} else if !s.gzip && strings.Contains(s.location, ".gz") {
 		s.location = strings.Replace(s.location, ".gz", "", 1)
 	}
-	s.Unlock()
-}
 
-// Load will load the data from the current file
-func (s *JSONStore) Load() error {
-	s.Lock()
-	defer s.Unlock()
+	s.Data = make(map[string][]byte)
+	s.gzip = true
+
 	var err error
 	if _, err = os.Stat(s.location); os.IsNotExist(err) {
 		err = errors.New("Location does not exist")
