@@ -1,7 +1,6 @@
 package jsonstore
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -26,7 +25,7 @@ func TestLoad(t *testing.T) {
 	if len(fs.Data) != 1 {
 		t.Errorf("expected %d got %d", 1, len(fs.Data))
 	}
-	if world, ok := fs.Data["hello"]; !ok || string(world) != `"world"` {
+	if world, ok := fs.Data["hello"]; !ok || string(world) != `world` {
 		t.Errorf("expected %s got %s", "world", world)
 	}
 }
@@ -42,11 +41,28 @@ func TestGeneral(t *testing.T) {
 	if err = Save(fs, f.Name()); err != nil {
 		t.Error(err)
 	}
-	b, _ := json.Marshal(fs.Data)
+	b := fs.Data["hello"]
 	fs, _ = Load(f.Name())
-	b2, _ := json.Marshal(fs.Data)
+	b2 := fs.Data["hello"]
 	if string(b) != string(b2) {
-		t.Errorf("expected %s got %s", b, b2)
+		t.Errorf("expected '%s' got '%s'", b, b2)
+	}
+
+	// Set an object
+	type Human struct {
+		Name   string
+		Height float64
+	}
+	fs.Set("human:1", Human{"Dante", 5.4})
+
+	// get the data back via an interface
+	var human Human
+	err = fs.Get("human:1", &human)
+	if err != nil {
+		t.Error(err)
+	}
+	if human.Height != 5.4 {
+		t.Errorf("expected '%v', got '%v'", Human{"Dante", 5.4}, human)
 	}
 }
 

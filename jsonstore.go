@@ -21,7 +21,7 @@ func (err NoSuchKeyError) Error() string {
 
 // JSONStore is the basic store object.
 type JSONStore struct {
-	Data map[string]json.RawMessage
+	Data map[string]string
 	sync.RWMutex
 }
 
@@ -68,13 +68,13 @@ func (s *JSONStore) Set(key string, value interface{}) error {
 	s.Lock()
 	defer s.Unlock()
 	if s.Data == nil {
-		s.Data = make(map[string]json.RawMessage)
+		s.Data = make(map[string]string)
 	}
 	b, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
-	s.Data[key] = json.RawMessage(b)
+	s.Data[key] = string(b)
 	return nil
 }
 
@@ -86,14 +86,14 @@ func (s *JSONStore) Get(key string, v interface{}) error {
 	if !ok {
 		return NoSuchKeyError{key}
 	}
-	return json.Unmarshal(b, &v)
+	return json.Unmarshal([]byte(b), &v)
 }
 
 // GetAll is like a filter with a regexp.
-func (s *JSONStore) GetAll(re *regexp.Regexp) map[string]json.RawMessage {
+func (s *JSONStore) GetAll(re *regexp.Regexp) map[string]string {
 	s.RLock()
 	defer s.RUnlock()
-	results := make(map[string]json.RawMessage)
+	results := make(map[string]string)
 	for k, v := range s.Data {
 		if re.MatchString(k) {
 			results[k] = v
