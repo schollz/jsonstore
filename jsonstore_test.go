@@ -14,11 +14,11 @@ func testFile() *os.File {
 	return f
 }
 
-func TestLoad(t *testing.T) {
+func TestOpen(t *testing.T) {
 	f := testFile()
 	defer os.Remove(f.Name())
 	ioutil.WriteFile(f.Name(), []byte(`{"hello":"world"}`), 0644)
-	fs, err := Load(f.Name())
+	fs, err := Open(f.Name())
 	if err != nil {
 		t.Error(err)
 	}
@@ -38,11 +38,11 @@ func TestGeneral(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if err = Save(fs, "test.json"); err != nil {
+	if err = Save(fs, f.Name()); err != nil {
 		t.Error(err)
 	}
 
-	fs2, _ := Load("test.json")
+	fs2, _ := Open(f.Name())
 	var a string
 	var b string
 	fs.Get("hello", &a)
@@ -58,7 +58,7 @@ func TestGeneral(t *testing.T) {
 	}
 	fs.Set("human:1", Human{"Dante", 5.4})
 	Save(fs, "test2.json.gz")
-	fs2, _ = Load("test2.json.gz")
+	fs2, _ = Open("test2.json.gz")
 	var human Human
 	fs2.Get("human:1", &human)
 	if human.Height != 5.4 {

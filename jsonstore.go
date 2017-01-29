@@ -25,8 +25,8 @@ type JSONStore struct {
 	sync.RWMutex
 }
 
-// Load will load a jsonstore from a file.
-func Load(filename string) (*JSONStore, error) {
+// Open will load a jsonstore from a file.
+func Open(filename string) (*JSONStore, error) {
 	b, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -44,15 +44,15 @@ func Load(filename string) (*JSONStore, error) {
 	fs := new(JSONStore)
 
 	// First Unmarshal the strings
-	toLoad := make(map[string]string)
-	err = json.Unmarshal(b, &toLoad)
+	toOpen := make(map[string]string)
+	err = json.Unmarshal(b, &toOpen)
 	if err != nil {
 		return nil, err
 	}
 	// Save to the raw message
 	fs.Data = make(map[string]json.RawMessage)
-	for key := range toLoad {
-		fs.Data[key] = json.RawMessage(toLoad[key])
+	for key := range toOpen {
+		fs.Data[key] = json.RawMessage(toOpen[key])
 	}
 	return fs, nil
 }
