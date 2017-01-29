@@ -119,6 +119,19 @@ func (s *JSONStore) GetAll(re *regexp.Regexp) map[string]json.RawMessage {
 	return results
 }
 
+// Keys returns all the keys currently in map
+func (s *JSONStore) Keys() []string {
+	s.RLock()
+	defer s.RUnlock()
+	keys := make([]string, len(s.Data))
+	i := 0
+	for k := range s.Data {
+		keys[i] = k
+		i++
+	}
+	return keys
+}
+
 // Delete removes a key from the store.
 func (s *JSONStore) Delete(key string) {
 	s.Lock()

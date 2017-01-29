@@ -3,6 +3,7 @@ package jsonstore
 import (
 	"io/ioutil"
 	"os"
+	"regexp"
 	"testing"
 )
 
@@ -63,6 +64,19 @@ func TestGeneral(t *testing.T) {
 	ks2.Get("human:1", &human)
 	if human.Height != 5.4 {
 		t.Errorf("expected '%v', got '%v'", Human{"Dante", 5.4}, human)
+	}
+}
+
+func TestRegex(t *testing.T) {
+	f := testFile()
+	defer os.Remove(f.Name())
+	ks := new(JSONStore)
+	ks.Set("hello:1", "world1")
+	ks.Set("hello:2", "world2")
+	ks.Set("hello:3", "world3")
+	ks.Set("world:1", "hello1")
+	if len(ks.GetAll(regexp.MustCompile(`hello`))) != 3 {
+		t.Errorf("Problem getting all")
 	}
 }
 
