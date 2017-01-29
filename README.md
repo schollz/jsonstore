@@ -67,7 +67,21 @@ $ zcat humans.json.gz
 
 - [schollz/urls](https://github.com/schollz/urls) - URL shortening
 
+# Dev
 
+Benchmark against Redis and BoltDB (Intel i5-4310U CPU @ 2.00GHz):
+
+```
+BenchmarkGet-4        	 2000000	       774 ns/op
+BenchmarkSet-4        	 3000000	       575 ns/op
+BenchmarkSave-4       	    3000	    511927 ns/op
+BenchmarkRedisSet-4   	  100000	     20713 ns/op
+BenchmarkRedisGet-4   	  100000	     19600 ns/op
+BenchmarkBoltSet-4    	     300	   4465848 ns/op
+BenchmarkBoltGet-4    	 1000000	      1118 ns/op
+PASS
+ok  	github.com/schollz/jsonstore	13.718s
+```
 
 # License
 
