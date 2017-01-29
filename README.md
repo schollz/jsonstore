@@ -21,25 +21,39 @@ go get -u -v github.com/schollz/jsonstore
 Then you can add it to your program. Check out the examples, or see below for basic usage:
 
 ```golang
-var ks jsonstore.JSONStore
-ks.Load("humans.json")
+ks := new(jsonstore.JSONStore)
 
 // set a key to any object you want
 type Human struct {
   Name   string
   Height float64
 }
-ks.Set("human:1", Human{"Dante", 5.4})
+err := ks.Set("human:1", Human{"Dante", 5.4})
+if err != nil {
+  panic(err)
+}
+
+// Saving will automatically gzip if .gz is provided
+if err = jsonstore.Save(ks, "humans.json.gz"); err != nil {
+  panic(err)
+}
+
+// Load any JSON / GZipped JSON
+ks2, err := jsonstore.Open("humans.json.gz")
+if err != nil {
+  panic(err)
+}
 
 // get the data back via an interface
 var human Human
-err := ks.Get("human:1", &human)
+err = ks2.Get("human:1", &human)
 if err != nil {
-  fmt.Println(err)
+  panic(err)
 }
+fmt.Println(human.Name) // Prints 'Dante'
 ```
 
-The datastore on disk is automatically Gziped (which can be toggled), and results in `humans.json.gz`:
+The datastore on disk is then contains:
 
 ```bash
 $ zcat humans.json.gz
@@ -47,11 +61,6 @@ $ zcat humans.json.gz
 "human:1": "{\"Name\":\"Dante\",\"Height\":5.4}"
 }
 ```
-
-## Notes
-
-*JSONStore* also keeps everything compressed within the in-memory dictionary. Because of this, *JSONStore* is much slower than most other solutions: setting a key without persistence takes 400 μs. Of course, this doesn't matter unless your handling hundreds of requests a minute.
-
 
 
 **JSONStore** in the wild:
