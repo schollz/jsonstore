@@ -12,6 +12,14 @@ Its really for those times where you just need a JSON file, hence *JSONStore*.
 
 ## Usage
 
+First, install the library using:
+
+```
+go get -u -v github.com/schollz/jsonstore
+```
+
+Then you can add it to your program. Check out the examples, or see below for basic usage:
+
 ```golang
 fs.Load("humans.json")
 
@@ -39,9 +47,17 @@ $ zcat humans.json.gz
 }
 ```
 
+## Notes
+
+*JSONStore* also keeps everything compressed within the in-memory dictionary. Because of this, *JSONStore* is much slower than most other solutions: setting a key without persistence takes 400 μs. Of course, this doesn't matter unless your handling hundreds of requests a minute.
+
+
+
 **JSONStore** in the wild:
 
 - [schollz/urls](https://github.com/schollz/urls) - URL shortening
+
+
 
 # License
 
