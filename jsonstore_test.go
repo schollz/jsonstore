@@ -38,29 +38,29 @@ func TestGeneral(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if err = Save(fs, f.Name()); err != nil {
+	if err = Save(fs, "test.json"); err != nil {
 		t.Error(err)
 	}
-	b := fs.Data["hello"]
-	fs, _ = Load(f.Name())
-	b2 := fs.Data["hello"]
-	if string(b) != string(b2) {
-		t.Errorf("expected '%s' got '%s'", b, b2)
+
+	fs2, _ := Load("test.json")
+	var a string
+	var b string
+	fs.Get("hello", &a)
+	fs2.Get("hello", &b)
+	if a != b {
+		t.Errorf("expected '%s' got '%s'", a, b)
 	}
 
-	// Set an object
+	// Set a object, using a Gzipped JSON
 	type Human struct {
 		Name   string
 		Height float64
 	}
 	fs.Set("human:1", Human{"Dante", 5.4})
-
-	// get the data back via an interface
+	Save(fs, "test2.json.gz")
+	fs2, _ = Load("test2.json.gz")
 	var human Human
-	err = fs.Get("human:1", &human)
-	if err != nil {
-		t.Error(err)
-	}
+	fs2.Get("human:1", &human)
 	if human.Height != 5.4 {
 		t.Errorf("expected '%v', got '%v'", Human{"Dante", 5.4}, human)
 	}
