@@ -21,18 +21,19 @@ go get -u -v github.com/schollz/jsonstore
 Then you can add it to your program. Check out the examples, or see below for basic usage:
 
 ```golang
-fs.Load("humans.json")
+var ks jsonstore.JSONStore
+ks.Load("humans.json")
 
 // set a key to any object you want
 type Human struct {
   Name   string
   Height float64
 }
-fs.Set("human:1", Human{"Dante", 5.4})
+ks.Set("human:1", Human{"Dante", 5.4})
 
 // get the data back via an interface
 var human Human
-err := fs.Get("human:1", &human)
+err := ks.Get("human:1", &human)
 if err != nil {
   fmt.Println(err)
 }
