@@ -1,6 +1,7 @@
 package jsonstore
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -88,20 +89,31 @@ func TestRegex(t *testing.T) {
 
 func BenchmarkGet(b *testing.B) {
 	ks := new(JSONStore)
-	ks.Set("data", 1234)
-	ks.Set("name", "bob")
+	err := ks.Set("human:1", Human{"Dante", 5.4})
+	if err != nil {
+		panic(err)
+	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		var num int
-		ks.Get("data", &num)
+		var human Human
+		ks.Get("human:1", &human)
 	}
+}
+
+type Human struct {
+	Name   string
+	Height float64
 }
 
 func BenchmarkSet(b *testing.B) {
 	ks := new(JSONStore)
 	b.ResetTimer()
+	// set a key to any object you want
 	for i := 0; i < b.N; i++ {
-		ks.Set("data", 1234)
+		err := ks.Set("human:1", Human{"Dante", 5.4})
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -139,15 +151,13 @@ func BenchmarkRedisSet(b *testing.B) {
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
-	err := client.Set("key", "value", 0).Err()
-	if err != nil {
-		fmt.Println("Problem setting Redis, is it installed?")
-		fmt.Println(err)
-		os.Exit(-1)
-	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		client.Set("data", 1234, 0)
+		bJSON, _ := json.Marshal(Human{"Dante", 5.4})
+		err := client.Set("human:1", bJSON, 0).Err()
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -157,15 +167,16 @@ func BenchmarkRedisGet(b *testing.B) {
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
-	err := client.Set("data", 1234, 0).Err()
+	bJSON, _ := json.Marshal(Human{"Dante", 5.4})
+	err := client.Set("human:1", bJSON, 0).Err()
 	if err != nil {
-		fmt.Println("Problem setting Redis, is it installed?")
-		fmt.Println(err)
-		os.Exit(-1)
+		panic(err)
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		client.Get("data").Result()
+		v, _ := client.Get("human:1").Result()
+		var human Human
+		json.Unmarshal([]byte(v), &human)
 	}
 }
 
@@ -227,7 +238,8 @@ func BenchmarkBoltSet(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte("MyBucket"))
-			err := b.Put([]byte("data"), []byte("1234"))
+			bJSON, _ := json.Marshal(Human{"Dante", 5.4})
+			err := b.Put([]byte("data"), bJSON)
 			return err
 		})
 	}
@@ -249,7 +261,8 @@ func BenchmarkBoltGet(b *testing.B) {
 	})
 	db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("MyBucket"))
-		err := b.Put([]byte("data"), []byte("1234"))
+		bJSON, _ := json.Marshal(Human{"Dante", 5.4})
+		err := b.Put([]byte("data"), bJSON)
 		return err
 	})
 
@@ -257,7 +270,9 @@ func BenchmarkBoltGet(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		db.View(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte("MyBucket"))
-			b.Get([]byte("data"))
+			dat := b.Get([]byte("data"))
+			var human Human
+			json.Unmarshal([]byte(dat), &human)
 			return nil
 		})
 	}
