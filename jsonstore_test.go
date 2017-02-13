@@ -87,6 +87,22 @@ func TestRegex(t *testing.T) {
 	}
 }
 
+func BenchmarkOpen(b *testing.B) {
+	f := testFile()
+	defer os.Remove(f.Name())
+	ioutil.WriteFile(f.Name(), []byte(`{"hello":"world"}`), 0644)
+	ks := new(JSONStore)
+	var err error
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		ks, err = Open(f.Name())
+		if err != nil {
+			panic(err)
+		}
+	}
+	Save(ks, f.Name())
+}
+
 func BenchmarkGet(b *testing.B) {
 	ks := new(JSONStore)
 	err := ks.Set("human:1", Human{"Dante", 5.4})

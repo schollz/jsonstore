@@ -29,6 +29,7 @@ type JSONStore struct {
 // Open will load a jsonstore from a file.
 func Open(filename string) (*JSONStore, error) {
 	f, err := os.Open(filename)
+	defer f.Close()
 	if err != nil {
 		return nil, err
 	}
