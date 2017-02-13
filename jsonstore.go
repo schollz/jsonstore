@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -27,29 +28,29 @@ type JSONStore struct {
 
 // Open will load a jsonstore from a file.
 func Open(filename string) (*JSONStore, error) {
-	b, err := ioutil.ReadFile(filename)
+	f, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
-	if strings.HasSuffix(filename, ".gz") {
-		r, err := gzip.NewReader(bytes.NewReader(b))
-		if err != nil {
-			return nil, err
-		}
-		b, err = ioutil.ReadAll(r)
-		if err != nil {
-			return nil, err
-		}
-	}
-	ks := new(JSONStore)
 
-	// First Unmarshal the strings
 	toOpen := make(map[string]string)
-	err = json.Unmarshal(b, &toOpen)
-	if err != nil {
-		return nil, err
+	if strings.HasSuffix(filename, ".gz") {
+		f2, err := gzip.NewReader(f)
+		if err != nil {
+			return nil, err
+		}
+		err = json.NewDecoder(f2).Decode(&toOpen)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = json.NewDecoder(f).Decode(&toOpen)
+		if err != nil {
+			return nil, err
+		}
 	}
-	// Save to the raw message
+
+	ks := new(JSONStore)
 	ks.Data = make(map[string]json.RawMessage)
 	for key := range toOpen {
 		ks.Data[key] = json.RawMessage(toOpen[key])
