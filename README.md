@@ -2,13 +2,8 @@
 
 [![GoDoc](https://godoc.org/github.com/schollz/jsonstore?status.svg)](https://godoc.org/github.com/schollz/jsonstore)
 
-*JSONStore* is a Go-library for a simple thread-safe in-memory JSON key-store with persistent backend.
-It's made for those times where you don't need a RDBMS like [MySQL](https://www.mysql.com/),
-or a NoSQL like [MongoDB](https://www.mongodb.com/) - basically when you just need a simple keystore.
-A really simple keystore. *JSONStore* is used in those times you don't need a distributed keystore
-like [etcd](https://coreos.com/etcd/docs/latest/), or
-a remote keystore [Redis](https://redis.io/) or a local keystore like [Bolt](https://github.com/boltdb/bolt).
-Its really for those times where you just need a JSON file, hence *JSONStore*.
+*JSONStore* is a Go-library for a simple thread-safe in-memory JSON key-store with persistent backend. It's made for those times where you don't need a RDBMS like [MySQL](https://www.mysql.com/), or a NoSQL like [MongoDB](https://www.mongodb.com/) - basically when you just need a simple keystore. A really simple keystore. *JSONStore* is used in those times you don't need a distributed keystore like [etcd](https://coreos.com/etcd/docs/latest/), or
+a remote keystore [Redis](https://redis.io/) or a local keystore like [Bolt](https://github.com/boltdb/bolt). Its really for those times where you just need a JSON file.
 
 ## Usage
 
