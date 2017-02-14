@@ -65,16 +65,27 @@ func TestGeneral(t *testing.T) {
 	}
 	ks.Set("human:1", Human{"Dante", 5.4})
 	Save(ks, "test2.json.gz")
-	ks2, err = Open("test2.json.gz")
+	Save(ks, "test2.json")
+	var human Human
+
+	ks2, err = Open("test2.json")
 	if err != nil {
 		t.Errorf(err.Error())
-		os.Exit(-1)
 	}
-	var human Human
 	ks2.Get("human:1", &human)
 	if human.Height != 5.4 {
 		t.Errorf("expected '%v', got '%v'", Human{"Dante", 5.4}, human)
 	}
+
+	ks2, err = Open("test2.json.gz")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	ks2.Get("human:1", &human)
+	if human.Height != 5.4 {
+		t.Errorf("expected '%v', got '%v'", Human{"Dante", 5.4}, human)
+	}
+
 }
 
 func TestRegex(t *testing.T) {
