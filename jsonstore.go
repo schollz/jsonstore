@@ -62,27 +62,26 @@ func OpenOld(filename string) (*JSONStore, error) {
 
 // Open will load a jsonstore from a file.
 func Open(filename string) (*JSONStore, error) {
+	var err error
 	f, err := os.Open(filename)
 	defer f.Close()
 	if err != nil {
 		return nil, err
 	}
 
+	var w io.Reader
 	toOpen := make(map[string]string)
 	if strings.HasSuffix(filename, ".gz") {
-		f2, err := gzip.NewReader(f)
-		if err != nil {
-			return nil, err
-		}
-		err = json.NewDecoder(f2).Decode(&toOpen)
+		w, err = gzip.NewReader(f)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err = json.NewDecoder(f).Decode(&toOpen)
-		if err != nil {
-			return nil, err
-		}
+		w = f
+	}
+	err = json.NewDecoder(w).Decode(&toOpen)
+	if err != nil {
+		return nil, err
 	}
 
 	ks := new(JSONStore)
