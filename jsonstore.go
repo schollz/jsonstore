@@ -97,6 +97,29 @@ func Open(filename string) (*JSONStore, error) {
 func Save(ks *JSONStore, filename string) (err error) {
 	ks.RLock()
 	defer ks.RUnlock()
+
+	toSave := make(map[string]string)
+	for key := range ks.Data {
+		toSave[key] = string(ks.Data[key])
+	}
+	b, err := json.MarshalIndent(toSave, "", " ")
+	if err != nil {
+		return
+	}
+	if strings.HasSuffix(filename, ".gz") {
+		var b2 bytes.Buffer
+		w := gzip.NewWriter(&b2)
+		w.Write(b)
+		w.Close()
+		b = b2.Bytes()
+	}
+	return ioutil.WriteFile(filename, b, 0644)
+}
+
+// SaveNew writes the jsonstore to disk (doesn't work?)
+func SaveNew(ks *JSONStore, filename string) (err error) {
+	ks.RLock()
+	defer ks.RUnlock()
 	toSave := make(map[string]string)
 	for key := range ks.Data {
 		toSave[key] = string(ks.Data[key])
