@@ -93,7 +93,7 @@ func Open(filename string) (*JSONStore, error) {
 }
 
 // Save writes the jsonstore to disk.
-func Save(ks *JSONStore, filename string) (err error) {
+func SaveOld(ks *JSONStore, filename string) (err error) {
 	ks.RLock()
 	defer ks.RUnlock()
 
@@ -116,27 +116,24 @@ func Save(ks *JSONStore, filename string) (err error) {
 }
 
 // SaveNew writes the jsonstore to disk (doesn't work?)
-func SaveNew(ks *JSONStore, filename string) (err error) {
+func Save(ks *JSONStore, filename string) (err error) {
 	ks.RLock()
 	defer ks.RUnlock()
 	toSave := make(map[string]string)
 	for key := range ks.Data {
 		toSave[key] = string(ks.Data[key])
 	}
-	var w io.Writer
 	f, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 	if strings.HasSuffix(filename, ".gz") {
-		w = gzip.NewWriter(f)
-	} else {
-		w = f
+		w := gzip.NewWriter(f)
+		defer w.Close()
+		return json.NewEncoder(w).Encode(toSave)
 	}
-	encoder := json.NewEncoder(w)
-	encoder.SetIndent("", " ")
-	return encoder.Encode(toSave)
+	return json.NewEncoder(f).Encode(toSave)
 }
 
 // Set saves a value at the given key.
