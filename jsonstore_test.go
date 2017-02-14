@@ -8,6 +8,11 @@ import (
 	"testing"
 )
 
+type Human struct {
+	Name   string
+	Height float64
+}
+
 func testFile() *os.File {
 	f, err := ioutil.TempFile(".", "jsonstore")
 	if err != nil {
@@ -60,12 +65,27 @@ func TestGeneral(t *testing.T) {
 	}
 	ks.Set("human:1", Human{"Dante", 5.4})
 	Save(ks, "test2.json.gz")
-	ks2, _ = Open("test2.json.gz")
+	Save(ks, "test2.json")
 	var human Human
+
+	ks2, err = Open("test2.json")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 	ks2.Get("human:1", &human)
 	if human.Height != 5.4 {
 		t.Errorf("expected '%v', got '%v'", Human{"Dante", 5.4}, human)
 	}
+
+	ks2, err = Open("test2.json.gz")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	ks2.Get("human:1", &human)
+	if human.Height != 5.4 {
+		t.Errorf("expected '%v', got '%v'", Human{"Dante", 5.4}, human)
+	}
+
 }
 
 func TestRegex(t *testing.T) {
@@ -161,6 +181,26 @@ func BenchmarkOpenOldSmall(b *testing.B) {
 	Save(ks, f.Name())
 }
 
+func BenchmarkOpen(b *testing.B) {
+	f := testFile()
+	defer os.Remove(f.Name())
+	ks := new(JSONStore)
+	for i := 1; i < 100; i++ {
+		ks.Set("hello:"+strconv.Itoa(i), "world"+strconv.Itoa(i))
+	}
+	Save(ks, f.Name())
+
+	var err error
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		ks, err = Open(f.Name())
+		if err != nil {
+			panic(err)
+		}
+	}
+	Save(ks, f.Name())
+}
+
 func BenchmarkGet(b *testing.B) {
 	ks := new(JSONStore)
 	err := ks.Set("human:1", Human{"Dante", 5.4})
@@ -172,11 +212,6 @@ func BenchmarkGet(b *testing.B) {
 		var human Human
 		ks.Get("human:1", &human)
 	}
-}
-
-type Human struct {
-	Name   string
-	Height float64
 }
 
 func BenchmarkSet(b *testing.B) {
