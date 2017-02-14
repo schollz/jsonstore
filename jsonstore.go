@@ -92,7 +92,7 @@ func Open(filename string) (*JSONStore, error) {
 	return ks, nil
 }
 
-// Save writes the jsonstore to disk.
+// SaveOld writes the jsonstore to disk.
 func SaveOld(ks *JSONStore, filename string) (err error) {
 	ks.RLock()
 	defer ks.RUnlock()
@@ -115,7 +115,7 @@ func SaveOld(ks *JSONStore, filename string) (err error) {
 	return ioutil.WriteFile(filename, b, 0644)
 }
 
-// SaveNew writes the jsonstore to disk (doesn't work?)
+// Save writes the jsonstore to disk
 func Save(ks *JSONStore, filename string) (err error) {
 	ks.RLock()
 	defer ks.RUnlock()
