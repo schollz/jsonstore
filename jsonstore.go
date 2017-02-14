@@ -131,9 +131,13 @@ func Save(ks *JSONStore, filename string) (err error) {
 	if strings.HasSuffix(filename, ".gz") {
 		w := gzip.NewWriter(f)
 		defer w.Close()
-		return json.NewEncoder(w).Encode(toSave)
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", " ")
+		return enc.Encode(toSave)
 	}
-	return json.NewEncoder(f).Encode(toSave)
+	enc := json.NewEncoder(f)
+	enc.SetIndent("", " ")
+	return enc.Encode(toSave)
 }
 
 // Set saves a value at the given key.
