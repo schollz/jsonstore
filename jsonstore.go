@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"io"
 	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -61,23 +63,24 @@ func Open(filename string) (*JSONStore, error) {
 func Save(ks *JSONStore, filename string) (err error) {
 	ks.RLock()
 	defer ks.RUnlock()
-
 	toSave := make(map[string]string)
 	for key := range ks.Data {
 		toSave[key] = string(ks.Data[key])
 	}
-	b, err := json.MarshalIndent(toSave, "", " ")
+	var w io.Writer
+	f, err := os.Create(filename)
 	if err != nil {
-		return
+		return err
 	}
+	defer f.Close()
 	if strings.HasSuffix(filename, ".gz") {
-		var b2 bytes.Buffer
-		w := gzip.NewWriter(&b2)
-		w.Write(b)
-		w.Close()
-		b = b2.Bytes()
+		w = gzip.NewWriter(f)
+	} else {
+		w = f
 	}
-	return ioutil.WriteFile(filename, b, 0644)
+	encoder := json.NewEncoder(w)
+	encoder.SetIndent("", " ")
+	return encoder.Encode(toSave)
 }
 
 // Set saves a value at the given key.
