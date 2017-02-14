@@ -70,12 +70,12 @@ Benchmark against using Redis and BoltDB as KeyStores using Go1.8 (Intel i5-4310
 $ go test -bench=. tests/redis/* > redis.txt
 $ go test -bench=. tests/bolt/* > bolt.txt
 $ go test -bench=. > jsonstore.txt
-$ enchcmp bolt.txt jsonstore.txt
+$ benchcmp bolt.txt jsonstore.txt
 benchmark           old ns/op     new ns/op     delta
 BenchmarkSet-4      4633164       939           -99.98%
 BenchmarkGet-4      3824          1564          -59.10%
 BenchmarkOpen-4     22049         153141        +594.55%
-$ enchcmp redis.txt jsonstore.txt
+$ benchcmp redis.txt jsonstore.txt
 benchmark           old ns/op     new ns/op     delta
 BenchmarkSet-4      29255         939           -96.79%
 BenchmarkGet-4      33082         1564          -95.27%
