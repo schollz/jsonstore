@@ -26,6 +26,39 @@ type JSONStore struct {
 	sync.RWMutex
 }
 
+// OpenOld will load a jsonstore from a file.
+// to be deprecated
+func OpenOld(filename string) (*JSONStore, error) {
+	b, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	if strings.HasSuffix(filename, ".gz") {
+		r, err := gzip.NewReader(bytes.NewReader(b))
+		if err != nil {
+			return nil, err
+		}
+		b, err = ioutil.ReadAll(r)
+		if err != nil {
+			return nil, err
+		}
+	}
+	ks := new(JSONStore)
+
+	// First Unmarshal the strings
+	toOpen := make(map[string]string)
+	err = json.Unmarshal(b, &toOpen)
+	if err != nil {
+		return nil, err
+	}
+	// Save to the raw message
+	ks.Data = make(map[string]json.RawMessage)
+	for key := range toOpen {
+		ks.Data[key] = json.RawMessage(toOpen[key])
+	}
+	return ks, nil
+}
+
 // Open will load a jsonstore from a file.
 func Open(filename string) (*JSONStore, error) {
 	f, err := os.Open(filename)

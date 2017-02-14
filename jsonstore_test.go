@@ -108,6 +108,26 @@ func BenchmarkOpenBig(b *testing.B) {
 	Save(ks, f.Name())
 }
 
+func BenchmarkOpenOldBig(b *testing.B) {
+	f := testFile()
+	defer os.Remove(f.Name())
+	ks := new(JSONStore)
+	for i := 1; i < 1000; i++ {
+		ks.Set("hello:"+strconv.Itoa(i), "world"+strconv.Itoa(i))
+	}
+	Save(ks, f.Name())
+
+	var err error
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		ks, err = OpenOld(f.Name())
+		if err != nil {
+			panic(err)
+		}
+	}
+	Save(ks, f.Name())
+}
+
 func BenchmarkOpenSmall(b *testing.B) {
 	f := testFile()
 	defer os.Remove(f.Name())
@@ -121,6 +141,26 @@ func BenchmarkOpenSmall(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		ks, err = Open(f.Name())
+		if err != nil {
+			panic(err)
+		}
+	}
+	Save(ks, f.Name())
+}
+
+func BenchmarkOpenOldSmall(b *testing.B) {
+	f := testFile()
+	defer os.Remove(f.Name())
+	ks := new(JSONStore)
+	for i := 1; i < 10; i++ {
+		ks.Set("hello:"+strconv.Itoa(i), "world"+strconv.Itoa(i))
+	}
+	Save(ks, f.Name())
+
+	var err error
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		ks, err = OpenOld(f.Name())
 		if err != nil {
 			panic(err)
 		}
