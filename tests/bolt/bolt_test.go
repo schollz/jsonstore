@@ -75,7 +75,7 @@ func BenchmarkSet(b *testing.B) {
 		db.Update(func(tx *bolt.Tx) error {
 			b := tx.Bucket([]byte("MyBucket"))
 			bJSON, _ := json.Marshal(Human{"Dante", 5.4})
-			err := b.Put([]byte("data"), bJSON)
+			err := b.Put([]byte("data"+strconv.Itoa(i)), bJSON)
 			return err
 		})
 	}
@@ -114,7 +114,7 @@ func BenchmarkGet(b *testing.B) {
 	}
 }
 
-func BenchmarkOpen(b *testing.B) {
+func BenchmarkOpen100(b *testing.B) {
 	defer os.Remove("my.db")
 	db, err := bolt.Open("my.db", 0600, nil)
 	if err != nil {
@@ -136,6 +136,40 @@ func BenchmarkOpen(b *testing.B) {
 	}
 	db.Close()
 
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		db, err := bolt.Open("my.db", 0600, nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		db.Close()
+	}
+}
+
+func BenchmarkOpen10000(b *testing.B) {
+	defer os.Remove("my.db")
+	db, err := bolt.Open("my.db", 0600, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucket([]byte("MyBucket"))
+		if err != nil {
+			return fmt.Errorf("create bucket: %s", err)
+		}
+		return nil
+	})
+	db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("MyBucket"))
+		for i := 1; i < 10000; i++ {
+			err := b.Put([]byte("hello:"+strconv.Itoa(i)), []byte("world"+strconv.Itoa(i)))
+			return err
+		}
+		return nil
+	})
+	db.Close()
+
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		db, err := bolt.Open("my.db", 0600, nil)
 		if err != nil {

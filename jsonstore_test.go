@@ -101,91 +101,31 @@ func TestRegex(t *testing.T) {
 	}
 }
 
-func BenchmarkOpenBig(b *testing.B) {
-	f := testFile()
-	defer os.Remove(f.Name())
-	ks := new(JSONStore)
-	for i := 1; i < 1000; i++ {
-		ks.Set("hello:"+strconv.Itoa(i), "world"+strconv.Itoa(i))
-	}
-	Save(ks, f.Name())
-
-	var err error
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		ks, err = Open(f.Name())
-		if err != nil {
-			panic(err)
-		}
-	}
-	Save(ks, f.Name())
-}
-
-func BenchmarkOpenOldBig(b *testing.B) {
-	f := testFile()
-	defer os.Remove(f.Name())
-	ks := new(JSONStore)
-	for i := 1; i < 1000; i++ {
-		ks.Set("hello:"+strconv.Itoa(i), "world"+strconv.Itoa(i))
-	}
-	Save(ks, f.Name())
-
-	var err error
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		ks, err = OpenOld(f.Name())
-		if err != nil {
-			panic(err)
-		}
-	}
-	Save(ks, f.Name())
-}
-
-func BenchmarkOpenSmall(b *testing.B) {
-	f := testFile()
-	defer os.Remove(f.Name())
-	ks := new(JSONStore)
-	for i := 1; i < 10; i++ {
-		ks.Set("hello:"+strconv.Itoa(i), "world"+strconv.Itoa(i))
-	}
-	Save(ks, f.Name())
-
-	var err error
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		ks, err = Open(f.Name())
-		if err != nil {
-			panic(err)
-		}
-	}
-	Save(ks, f.Name())
-}
-
-func BenchmarkOpenOldSmall(b *testing.B) {
-	f := testFile()
-	defer os.Remove(f.Name())
-	ks := new(JSONStore)
-	for i := 1; i < 10; i++ {
-		ks.Set("hello:"+strconv.Itoa(i), "world"+strconv.Itoa(i))
-	}
-	Save(ks, f.Name())
-
-	var err error
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		ks, err = OpenOld(f.Name())
-		if err != nil {
-			panic(err)
-		}
-	}
-	Save(ks, f.Name())
-}
-
-func BenchmarkOpen(b *testing.B) {
+func BenchmarkOpen100(b *testing.B) {
 	f := testFile()
 	defer os.Remove(f.Name())
 	ks := new(JSONStore)
 	for i := 1; i < 100; i++ {
+		ks.Set("hello:"+strconv.Itoa(i), "world"+strconv.Itoa(i))
+	}
+	Save(ks, f.Name())
+
+	var err error
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		ks, err = Open(f.Name())
+		if err != nil {
+			panic(err)
+		}
+	}
+	Save(ks, f.Name())
+}
+
+func BenchmarkOpen10000(b *testing.B) {
+	f := testFile()
+	defer os.Remove(f.Name())
+	ks := new(JSONStore)
+	for i := 1; i < 10000; i++ {
 		ks.Set("hello:"+strconv.Itoa(i), "world"+strconv.Itoa(i))
 	}
 	Save(ks, f.Name())
@@ -219,16 +159,51 @@ func BenchmarkSet(b *testing.B) {
 	b.ResetTimer()
 	// set a key to any object you want
 	for i := 0; i < b.N; i++ {
-		err := ks.Set("human:1", Human{"Dante", 5.4})
+		err := ks.Set("human:"+strconv.Itoa(i), Human{"Dante", 5.4})
 		if err != nil {
 			panic(err)
 		}
 	}
 }
 
-func BenchmarkSave(b *testing.B) {
+func BenchmarkSave100(b *testing.B) {
 	ks := new(JSONStore)
-	ks.Set("data", 1234)
+	for i := 1; i < 100; i++ {
+		ks.Set("hello:"+strconv.Itoa(i), "world"+strconv.Itoa(i))
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Save(ks, "benchmark.json")
+	}
+}
+
+func BenchmarkSave10000(b *testing.B) {
+	ks := new(JSONStore)
+	for i := 1; i < 10000; i++ {
+		ks.Set("hello:"+strconv.Itoa(i), "world"+strconv.Itoa(i))
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Save(ks, "benchmark.json")
+	}
+}
+
+func BenchmarkSaveGz100(b *testing.B) {
+	ks := new(JSONStore)
+	for i := 1; i < 100; i++ {
+		ks.Set("hello:"+strconv.Itoa(i), "world"+strconv.Itoa(i))
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Save(ks, "benchmark.json.gz")
+	}
+}
+
+func BenchmarkSaveGz10000(b *testing.B) {
+	ks := new(JSONStore)
+	for i := 1; i < 10000; i++ {
+		ks.Set("hello:"+strconv.Itoa(i), "world"+strconv.Itoa(i))
+	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		Save(ks, "benchmark.json.gz")

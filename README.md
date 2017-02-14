@@ -64,22 +64,24 @@ $ zcat humans.json.gz
 
 # Dev
 
-Benchmark against using Redis and BoltDB as KeyStores using Go1.8 (Intel i5-4310U CPU @ 2.00GHz):
+Benchmark against using Redis and BoltDB as KeyStores using Go1.8 (Intel i5-4310U CPU @ 2.00GHz). Take away is that setting/getting is faster in *JSONStore* (because its just a map), but opening is much slower (because its a file that is read into memory). So don't use this if you have to store 1,000,000+ things!
 
 ```
 $ go test -bench=. tests/redis/* > redis.txt
 $ go test -bench=. tests/bolt/* > bolt.txt
 $ go test -bench=. > jsonstore.txt
-$ enchcmp bolt.txt jsonstore.txt
-benchmark           old ns/op     new ns/op     delta
-BenchmarkSet-4      4633164       939           -99.98%
-BenchmarkGet-4      3824          1564          -59.10%
-BenchmarkOpen-4     22049         153141        +594.55%
-$ enchcmp redis.txt jsonstore.txt
-benchmark           old ns/op     new ns/op     delta
-BenchmarkSet-4      29255         939           -96.79%
-BenchmarkGet-4      33082         1564          -95.27%
-BenchmarkOpen-4     14624         153141        +947.19%
+$ benchcmp bolt.txt jsonstore.txt
+benchmark                old ns/op     new ns/op     delta
+BenchmarkSet-4           5471747       1847          -99.97%
+BenchmarkGet-4           2424          1479          -38.99%
+BenchmarkOpen100-4       11168         148035        +1225.53%
+BenchmarkOpen10000-4     10095         19722376      +195267.77%
+$ benchcmp redis.txt jsonstore.txt
+benchmark                old ns/op     new ns/op     delta
+BenchmarkSet-4           24717         1847          -92.53%
+BenchmarkGet-4           22561         1479          -93.44%
+BenchmarkOpen100-4       6221          148035        +2279.60%
+BenchmarkOpen10000-4     4951          19722376      +398251.36%
 ```
 
 # License
