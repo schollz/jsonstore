@@ -64,18 +64,22 @@ $ zcat humans.json.gz
 
 # Dev
 
-Benchmark against Redis and BoltDB using Go1.8 (Intel i5-4310U CPU @ 2.00GHz):
+Benchmark against using Redis and BoltDB as KeyStores using Go1.8 (Intel i5-4310U CPU @ 2.00GHz):
 
 ```
-BenchmarkGet-4        	 1000000	      1481 ns/op
-BenchmarkSet-4        	 2000000	       850 ns/op
-BenchmarkSave-4       	    5000	    346912 ns/op
-BenchmarkRedisSet-4   	  100000	     20673 ns/op
-BenchmarkRedisGet-4   	  100000	     22280 ns/op
-BenchmarkBoltSet-4    	     300	   4413128 ns/op
-BenchmarkBoltGet-4    	  500000	      2473 ns/op
-PASS
-ok  	github.com/schollz/jsonstore	13.853s
+$ go test -bench=. tests/redis/* > redis.txt
+$ go test -bench=. tests/bolt/* > bolt.txt
+$ go test -bench=. > jsonstore.txt
+$ enchcmp bolt.txt jsonstore.txt
+benchmark           old ns/op     new ns/op     delta
+BenchmarkSet-4      4633164       939           -99.98%
+BenchmarkGet-4      3824          1564          -59.10%
+BenchmarkOpen-4     22049         153141        +594.55%
+$ enchcmp redis.txt jsonstore.txt
+benchmark           old ns/op     new ns/op     delta
+BenchmarkSet-4      29255         939           -96.79%
+BenchmarkGet-4      33082         1564          -95.27%
+BenchmarkOpen-4     14624         153141        +947.19%
 ```
 
 # License
