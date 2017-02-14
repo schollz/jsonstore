@@ -68,7 +68,7 @@ func Save(ks *JSONStore, filename string) (err error) {
 		toSave[key] = string(ks.Data[key])
 	}
 	var w io.Writer
-	f, err := os.OpenFile(filename, os.O_RDWR, 0644)
+	f, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
