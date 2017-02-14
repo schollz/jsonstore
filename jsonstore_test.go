@@ -1,19 +1,17 @@
 package jsonstore
 
 import (
-	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"regexp"
 	"strconv"
 	"testing"
-
-	"github.com/boltdb/bolt"
-
-	redis "gopkg.in/redis.v5"
 )
+
+type Human struct {
+	Name   string
+	Height float64
+}
 
 func testFile() *os.File {
 	f, err := ioutil.TempFile(".", "jsonstore")
@@ -168,6 +166,26 @@ func BenchmarkOpenOldSmall(b *testing.B) {
 	Save(ks, f.Name())
 }
 
+func BenchmarkOpen(b *testing.B) {
+	f := testFile()
+	defer os.Remove(f.Name())
+	ks := new(JSONStore)
+	for i := 1; i < 100; i++ {
+		ks.Set("hello:"+strconv.Itoa(i), "world"+strconv.Itoa(i))
+	}
+	Save(ks, f.Name())
+
+	var err error
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		ks, err = Open(f.Name())
+		if err != nil {
+			panic(err)
+		}
+	}
+	Save(ks, f.Name())
+}
+
 func BenchmarkGet(b *testing.B) {
 	ks := new(JSONStore)
 	err := ks.Set("human:1", Human{"Dante", 5.4})
@@ -179,11 +197,6 @@ func BenchmarkGet(b *testing.B) {
 		var human Human
 		ks.Get("human:1", &human)
 	}
-}
-
-type Human struct {
-	Name   string
-	Height float64
 }
 
 func BenchmarkSet(b *testing.B) {
@@ -204,157 +217,5 @@ func BenchmarkSave(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		Save(ks, "benchmark.json.gz")
-	}
-}
-
-func TestRedis(t *testing.T) {
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-	err := client.Set("data", 1234, 0).Err()
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-	val, err := client.Get("data").Result()
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-	if val != "1234" {
-		t.Errorf("Got %v instead of 1234", val)
-	}
-}
-
-func BenchmarkRedisSet(b *testing.B) {
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		bJSON, _ := json.Marshal(Human{"Dante", 5.4})
-		err := client.Set("human:1", bJSON, 0).Err()
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-func BenchmarkRedisGet(b *testing.B) {
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-	bJSON, _ := json.Marshal(Human{"Dante", 5.4})
-	err := client.Set("human:1", bJSON, 0).Err()
-	if err != nil {
-		panic(err)
-	}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		v, _ := client.Get("human:1").Result()
-		var human Human
-		json.Unmarshal([]byte(v), &human)
-	}
-}
-
-func TestBolt(t *testing.T) {
-	defer os.Remove("my.db")
-	db, err := bolt.Open("my.db", 0600, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucket([]byte("MyBucket"))
-		if err != nil {
-			return fmt.Errorf("create bucket: %s", err)
-		}
-		return nil
-	})
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-
-	err = db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("MyBucket"))
-		err := b.Put([]byte("data"), []byte("1234"))
-		return err
-	})
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-
-	var result string
-	db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("MyBucket"))
-		result = string(b.Get([]byte("data")))
-		return nil
-	})
-
-	if result != "1234" {
-		t.Errorf("Problem reading/writing with BoltDB")
-	}
-}
-
-func BenchmarkBoltSet(b *testing.B) {
-	defer os.Remove("my.db")
-	db, err := bolt.Open("my.db", 0600, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-	db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucket([]byte("MyBucket"))
-		if err != nil {
-			return fmt.Errorf("create bucket: %s", err)
-		}
-		return nil
-	})
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		db.Update(func(tx *bolt.Tx) error {
-			b := tx.Bucket([]byte("MyBucket"))
-			bJSON, _ := json.Marshal(Human{"Dante", 5.4})
-			err := b.Put([]byte("data"), bJSON)
-			return err
-		})
-	}
-}
-
-func BenchmarkBoltGet(b *testing.B) {
-	defer os.Remove("my.db")
-	db, err := bolt.Open("my.db", 0600, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-	db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucket([]byte("MyBucket"))
-		if err != nil {
-			return fmt.Errorf("create bucket: %s", err)
-		}
-		return nil
-	})
-	db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("MyBucket"))
-		bJSON, _ := json.Marshal(Human{"Dante", 5.4})
-		err := b.Put([]byte("data"), bJSON)
-		return err
-	})
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		db.View(func(tx *bolt.Tx) error {
-			b := tx.Bucket([]byte("MyBucket"))
-			dat := b.Get([]byte("data"))
-			var human Human
-			json.Unmarshal([]byte(dat), &human)
-			return nil
-		})
 	}
 }
