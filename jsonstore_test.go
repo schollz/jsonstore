@@ -99,6 +99,9 @@ func TestRegex(t *testing.T) {
 	if len(ks.GetAll(regexp.MustCompile(`hello`))) != len(ks.Keys())-1 {
 		t.Errorf("Problem getting all")
 	}
+	if len(ks.GetAll(nil)) != len(ks.Keys()) {
+		t.Errorf("Problem getting all")
+	}
 }
 
 func BenchmarkOpen100(b *testing.B) {
