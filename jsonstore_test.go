@@ -64,8 +64,8 @@ func TestGeneral(t *testing.T) {
 		Height float64
 	}
 	ks.Set("human:1", Human{"Dante", 5.4})
-	Save(ks, "test2.json.gz")
-	Save(ks, "test2.json")
+	Save(ks, "test2.json.gz") // TODO: use tmp file and remove when done
+	Save(ks, "test2.json") // TODO: use tmp file and remove when done
 	var human Human
 
 	ks2, err = Open("test2.json")
@@ -97,6 +97,9 @@ func TestRegex(t *testing.T) {
 	ks.Set("hello:3", "world3")
 	ks.Set("world:1", "hello1")
 	if len(ks.GetAll(regexp.MustCompile(`hello`))) != len(ks.Keys())-1 {
+		t.Errorf("Problem getting all")
+	}
+	if len(ks.GetAll(nil)) != len(ks.Keys()) {
 		t.Errorf("Problem getting all")
 	}
 }
