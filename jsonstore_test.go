@@ -65,7 +65,7 @@ func TestGeneral(t *testing.T) {
 	}
 	ks.Set("human:1", Human{"Dante", 5.4})
 	Save(ks, "test2.json.gz") // TODO: use tmp file and remove when done
-	Save(ks, "test2.json") // TODO: use tmp file and remove when done
+	Save(ks, "test2.json")    // TODO: use tmp file and remove when done
 	var human Human
 
 	ks2, err = Open("test2.json")
@@ -212,3 +212,13 @@ func BenchmarkSaveGz10000(b *testing.B) {
 		Save(ks, "benchmark.json.gz")
 	}
 }
+
+// func TestPrefix(t *testing.T) {
+// 	ks := new(JSONStore)
+// 	ks.Set("hello-1", "1")
+// 	ks.Set("hello-2", "2")
+// 	ks.Set("hello-3", "3")
+// 	ks.Set("hello-4", "4")
+// 	ks.Set("world-1", "1")
+// 	fmt.Println(ks.GetAll(regexp.MustCompile(`hello`), 1))
+// }

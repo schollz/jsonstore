@@ -110,13 +110,18 @@ func (s *JSONStore) Get(key string, v interface{}) error {
 }
 
 // GetAll is like a filter with a regexp. If the regexp is nil, then it returns everything.
-func (s *JSONStore) GetAll(re *regexp.Regexp) map[string]json.RawMessage {
+func (s *JSONStore) GetAll(re *regexp.Regexp, limit ...int) map[string]json.RawMessage {
 	s.RLock()
 	defer s.RUnlock()
 	results := make(map[string]json.RawMessage)
 	for k, v := range s.Data {
 		if re == nil || re.MatchString(k) {
 			results[k] = v
+			if len(limit) > 0 {
+				if len(results) >= limit[0] {
+					return results
+				}
+			}
 		}
 	}
 	return results
